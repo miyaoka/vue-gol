@@ -10,7 +10,7 @@
     <g
       v-for="(cell, i) in cells"
       :key="i"
-      :transform="`translate(${(i % cols) * size} ${Math.floor(i / cols) * size})`"
+      :transform="`translate(${(i % padCols) * size} ${Math.floor(i / padCols) * size})`"
     >
       <gol-cell
         :i="i"
@@ -28,10 +28,11 @@
 import Vue from 'vue'
 import GolCell from './GolCell.vue'
 
+const padding: number = 1
 let timerID: number
 
-const getNeighbor = (i: number, cols: number, rows: number): Array<number> => {
-  const n: number = -cols
+const neighbors = (cols: number, rows: number): Array<number> => {
+  const n = -cols
   const e = 1
   const s = cols
   const w = -1
@@ -40,38 +41,19 @@ const getNeighbor = (i: number, cols: number, rows: number): Array<number> => {
   const ne = n + 1
   const sw = s - 1
   const se = s + 1
-
-  const x = i % cols
-  const y = Math.floor(i / cols)
-
-  const neighbors = []
-
-  const xMax = cols - 1
-  const yMax = rows - 1
-  const yNeighbors = (T: number, B: number): Array<number> => {
-    const ary: Array<number> = []
-    if (y > 0) ary.push(T)
-    if (y < yMax) ary.push(B)
-    return ary
-  }
-
-  if (x > 0) {
-    neighbors.push(w, ...yNeighbors(nw, sw))
-  }
-  if (x < xMax) {
-    neighbors.push(e, ...yNeighbors(ne, se))
-  }
-  neighbors.push(...yNeighbors(n, s))
-  return neighbors
+  return [
+    n, e, s, w, nw, ne, sw, se
+  ]
 }
 
 const initBoard = (rows: number, cols: number, cb: Function) => {
+  const yMax = cols - 1
+  const xMax = rows - 1
   return [].concat.apply(
     [],
-    [...Array(rows).keys()].map(r => {
-      return [...Array(cols).keys()].map(c => ({
-        state: cb(c, r),
-        neighbors: getNeighbor(r * cols + c, cols, rows)
+    [...Array(rows).keys()].map(y => {
+      return [...Array(cols).keys()].map(x => ({
+        state: (y === 0 || y === yMax || x === 0 || x === xMax) ? 0 : cb(x, y)
       }))
     })
   )
@@ -82,11 +64,18 @@ export default Vue.extend({
   components: {
     GolCell
   },
+  created: function () {
+    this.random()
+    this.neighbors = neighbors(this.padCols, this.padRows)
+  },
   data: function () {
     return {
       isMouseDown: false,
       gen: 0,
-      cells: initBoard(this.rows, this.cols, () => Math.random() > 0.8 ? 1 : 0)
+      cells: [{
+        state: 0
+      }],
+      neighbors: [0]
     }
   },
   props: {
@@ -102,6 +91,12 @@ export default Vue.extend({
     }
   },
   computed: {
+    padCols (): number {
+      return this.cols + padding * 2
+    },
+    padRows (): number {
+      return this.rows + padding * 2
+    }
   },
   methods: {
     onMouseDown () {
@@ -131,11 +126,11 @@ export default Vue.extend({
     },
     clear (): void {
       this.gen = 0
-      this.cells = initBoard(this.rows, this.cols, () => 0)
+      this.cells = initBoard(this.padRows, this.padCols, () => 0)
     },
     random (): void {
       this.gen = 0
-      this.cells = initBoard(this.rows, this.cols, () => Math.random() > 0.8 ? 1 : 0)
+      this.cells = initBoard(this.padRows, this.padCols, () => Math.random() > 0.8 ? 1 : 0)
     },
     nextGen (): void {
       this.gen++
@@ -143,7 +138,7 @@ export default Vue.extend({
       const nCounts = this.cells
       .map((c: any, i: number, ary: Array<any>) => {
         let sum: number = 0
-        c.neighbors.forEach((n: number) => {
+        this.neighbors.forEach((n: number) => {
           const nCell: any = ary[i + n]
           if (nCell === undefined || nCell.state === 0) return
           sum += 1
