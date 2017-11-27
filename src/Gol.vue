@@ -1,42 +1,17 @@
 <template>
-  <div>
-    <gol-board
-      :cols="cols"
-      :rows="rows"
-      :play="play"
-      :interval="50"
-      ref="gol"
-    ></gol-board>
-    <div>
-      <button
-        @click="play = true"
-      >start</button>
-      <button
-        @click="play = false"
-      >stop</button>
-      <button
-        @click="onClickStep"
-      >step</button>
-    </div>
-    <div>
-      <button
-        @click="onClickClear"
-      >clear</button>
-      <button
-        @click="onClickRandom"
-      >random</button>
-    </div>
-  </div>
+  <gol-preview />
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
+import GolPreview from '@/components/GolPreview.vue'
 import GolBoard from '@/components/GolBoard.vue'
 
 export default Vue.extend({
   name: 'app',
   components: {
-    GolBoard
+    GolBoard,
+    GolPreview
   },
   data: function () {
     return {
