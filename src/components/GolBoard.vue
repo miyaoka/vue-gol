@@ -65,6 +65,18 @@ const getNeighbor = (i: number, cols: number, rows: number): Array<number> => {
   return neighbors
 }
 
+const initBoard = (rows: number, cols: number, cb: Function) => {
+  return [].concat.apply(
+    [],
+    [...Array(rows).keys()].map(r => {
+      return [...Array(cols).keys()].map(c => ({
+        state: cb(c, r),
+        neighbors: getNeighbor(r * cols + c, cols, rows)
+      }))
+    })
+  )
+}
+
 export default Vue.extend({
   name: 'GolBoard',
   components: {
@@ -74,15 +86,7 @@ export default Vue.extend({
     return {
       isMouseDown: false,
       gen: 0,
-      cells: [].concat.apply(
-        [],
-        [...Array(this.rows).keys()].map(r => {
-          return [...Array(this.cols).keys()].map(c => ({
-            state: Math.random() > 0.8 ? 1 : 0,
-            neighbors: getNeighbor(r * this.cols + c, this.cols, this.rows)
-          }))
-        })
-      )
+      cells: initBoard(this.rows, this.cols, () => Math.random() > 0.8 ? 1 : 0)
     }
   },
   props: {
@@ -127,28 +131,11 @@ export default Vue.extend({
     },
     clear (): void {
       this.gen = 0
-      console.log('clear')
-      this.cells = [].concat.apply(
-        [],
-        [...Array(this.rows).keys()].map(r => {
-          return [...Array(this.cols).keys()].map(c => ({
-            state: 0,
-            neighbors: getNeighbor(r * this.cols + c, this.cols, this.rows)
-          }))
-        })
-      )
+      this.cells = initBoard(this.rows, this.cols, () => 0)
     },
     random (): void {
-      console.log('random')
-      this.cells = [].concat.apply(
-        [],
-        [...Array(this.rows).keys()].map(r => {
-          return [...Array(this.cols).keys()].map(c => ({
-            state: Math.random() > 0.8 ? 1 : 0,
-            neighbors: getNeighbor(r * this.cols + c, this.cols, this.rows)
-          }))
-        })
-      )
+      this.gen = 0
+      this.cells = initBoard(this.rows, this.cols, () => Math.random() > 0.8 ? 1 : 0)
     },
     nextGen (): void {
       this.gen++
