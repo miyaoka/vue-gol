@@ -1,4 +1,4 @@
-# vue-ts
+# vue-gol
 
 > A Vue.js project
 

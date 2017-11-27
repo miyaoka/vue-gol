@@ -1,19 +1,18 @@
 <template>
   <div id="app">
-    <hello-world
-      :text="'world'"
-    ></hello-world>
+    <gol
+    ></gol>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import HelloWorld from '@/components/HelloWorld.vue'
+import Gol from '@/Gol.vue'
 
 export default Vue.extend({
   name: 'app',
   components: {
-    HelloWorld
+    Gol
   },
   props: {
     size: {
