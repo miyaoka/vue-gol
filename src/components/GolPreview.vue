@@ -3,9 +3,8 @@
     <textarea
       v-model="rawdata"
     />
-    <input type="number" v-model.number="w">
-    <input type="number" v-model.number="h">
-    <input type="number" v-model.number="s">
+    <input type="number" v-model.number="w" min="1">
+    <input type="number" v-model.number="h" min="1">
     <input type="number" v-model.number="fragmentDigits">
     <hr>
 
@@ -18,6 +17,7 @@
 
     <h3>sum</h3>
     <gol-preview-table
+      :wrapped="true"
       :data="sum"
       :w="paddedW"
       :h="paddedH"
@@ -27,51 +27,60 @@
 
     <div class="neighbor">
       <gol-preview-table
-        :data="shiftData(-paddedW-1)"
+        :wrapped="true"
+        :data="shiftedBoardList[0]"
         :w="paddedW"
         :h="paddedH"
       />
       <gol-preview-table
-        :data="shiftData(-paddedW)"
+        :wrapped="true"
+        :data="shiftedBoardList[1]"
         :w="paddedW"
         :h="paddedH"
       />
       <gol-preview-table
-        :data="shiftData(-paddedW+1)"
-        :w="paddedW"
-        :h="paddedH"
-      />
-    </div>
-    <div class="neighbor">
-      <gol-preview-table
-        :data="shiftData(-1)"
-        :w="paddedW"
-        :h="paddedH"
-      />
-      <gol-preview-table
-        :data="shiftData(0)"
-        :w="paddedW"
-        :h="paddedH"
-      />
-      <gol-preview-table
-        :data="shiftData(1)"
+        :wrapped="true"
+        :data="shiftedBoardList[2]"
         :w="paddedW"
         :h="paddedH"
       />
     </div>
     <div class="neighbor">
       <gol-preview-table
-        :data="shiftData(paddedW-1)"
+        :wrapped="true"
+        :data="shiftedBoardList[3]"
         :w="paddedW"
         :h="paddedH"
       />
       <gol-preview-table
-        :data="shiftData(paddedW)"
+        :wrapped="true"
+        :data="wrappedData"
         :w="paddedW"
         :h="paddedH"
       />
       <gol-preview-table
-        :data="shiftData(paddedW+1)"
+        :wrapped="true"
+        :data="shiftedBoardList[4]"
+        :w="paddedW"
+        :h="paddedH"
+      />
+    </div>
+    <div class="neighbor">
+      <gol-preview-table
+        :wrapped="true"
+        :data="shiftedBoardList[5]"
+        :w="paddedW"
+        :h="paddedH"
+      />
+      <gol-preview-table
+        :wrapped="true"
+        :data="shiftedBoardList[6]"
+        :w="paddedW"
+        :h="paddedH"
+      />
+      <gol-preview-table
+        :wrapped="true"
+        :data="shiftedBoardList[7]"
         :w="paddedW"
         :h="paddedH"
       />
@@ -98,40 +107,44 @@ export default Vue.extend({
       rawdata: '1001111000001010100001011010',
       w: 6,
       h: 6,
-      s: 1,
-      fragmentDigits: 15 // 10^15 => 50bit < 53bit
+      shiftedBoardList: Array(8).fill(''),
+      fragmentDigits: 15 // log2(10^15) => 50bit < 53bit
     }
   },
   props: {
   },
   watch: {
+    wrappedData () {
+      this.calcShiftedBoardList()
+    }
+  },
+  mounted () {
+    this.calcShiftedBoardList()
   },
   computed: {
-    paddedW (): number { return this.w + 2 },
+    paddedW (): number {
+//      this.calcShiftedBoardList()
+      return this.w + 2
+    },
     paddedH (): number { return this.h + 2 },
     wrappedData (): string {
-      const w = this.w + 2
       const wrapped = [
-        '0'.repeat(w + 1),
-        splitByLength(this.rawdata, this.w)
+        '0'.repeat(this.paddedW + 1),
+        splitByLength(this.rawdata, this.paddedW)
         .map(s => s + '00')
         .join(''),
-        '0'.repeat(w * 5 - 1)
+        '0'.repeat(this.paddedW - 1)
       ].join('')
 
-      return wrapped.padEnd(Math.ceil(wrapped.length / w) * w, '0')
+      return wrapped.padEnd(Math.ceil(wrapped.length / this.paddedW) * this.paddedW, '0')
     },
     data (): string {
       return this.rawdata.padEnd(Math.ceil(this.rawdata.length / this.w) * this.w, '0')
     },
     sum (): string {
-      const boardSumFragments =
-      [
-        -this.paddedW - 1, -this.paddedW, -this.paddedW + 1,
-        -1, 1,
-        this.paddedW - 1, this.paddedW, this.paddedW + 1
-      ].map(offset => {
-        return splitByLength(this.shiftData(offset), this.fragmentDigits)
+      const boardSumFragments = this.shiftedBoardList
+      .map(boardData => {
+        return splitByLength(boardData, this.fragmentDigits)
         .map(fragment => Number(fragment))
       })
       .reduce((prev: number[], curr: number[]) => {
@@ -147,16 +160,20 @@ export default Vue.extend({
     }
   },
   methods: {
-    shiftData (offset: number): string {
+    calcShiftedBoardList (): void {
+      this.shiftedBoardList =
+      [
+        -this.paddedW - 1, -this.paddedW, -this.paddedW + 1,
+        -1, 1,
+        this.paddedW - 1, this.paddedW, this.paddedW + 1
+      ].map(offset => this.shiftBoardData(offset))
+    },
+    shiftBoardData (offset: number): string {
       offset *= -1
       const len = this.wrappedData.length
       return offset < 0
       ? this.wrappedData.slice(0, offset).padStart(len, '0')
       : this.wrappedData.slice(offset).padEnd(len, '0')
-    },
-    shiftData0 (sft: number): string {
-      const d = parseInt(this.data, 2)
-      return ((sft < 0 ? d >> -sft : d << sft) & 0xfffffff).toString(2).padStart(28, '0')
     }
   }
 })
@@ -164,18 +181,4 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-table {
-  border-collapse: collapse;
-}
-td {
-  border: 1px solid;
-  padding: 0 6px;
-}
-td.live {
-  background: #fcc
-}
-
-.neighbor > div {
-  display: inline-block;
-}
 </style>

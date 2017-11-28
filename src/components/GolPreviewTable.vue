@@ -1,16 +1,18 @@
 <template>
-  <div>
-    <table>
+  <div class="preview">
+    <table
+      :class="{wrapped}"
+    >
       <tr
         v-for="(row, ri) in dataArray"
         :key="ri"
       >
         <td
-          v-for="(col, ci) in row"
+          v-for="(val, ci) in row"
           :key="ci"
-          :class="{live: col > 0}"
+          :class="{live: val > 0}"
         >
-          {{col}}
+          {{val}}
         </td>
       </tr>
     </table>
@@ -33,13 +35,14 @@ export default Vue.extend({
       type: String
     },
     w: { type: Number },
-    h: { type: Number }
+    h: { type: Number },
+    wrapped: { type: Boolean }
   },
   watch: {
   },
   computed: {
-    dataArray (): any {
-      return this.data.slice(0, this.w * this.h).split(new RegExp('(.{' + this.w + '})')).filter(x => x)
+    dataArray (): Array<string> {
+      return this.data.split(new RegExp('(.{' + this.w + '})')).filter(x => x)
     }
   },
   methods: {
@@ -49,15 +52,26 @@ export default Vue.extend({
 </script>
 
 <style scoped>
+.preview {
+  display: inline-block;
+}
 table {
   border-collapse: collapse;
+  font-size: 9px;
 }
 td {
   border: 1px solid;
-  padding: 0 6px;
+  padding: 0 3px;
 }
 td.live {
   background: #fcc
 }
-
+.wrapped {
+  & tr:first-of-type td,
+  & tr:last-of-type td,
+  & td:first-of-type,
+  & td:last-of-type {
+    background: #ccc;
+  }
+}
 </style>
