@@ -35,7 +35,6 @@ export default Vue.extend({
       type: String
     },
     w: { type: Number },
-    h: { type: Number },
     wrapped: { type: Boolean }
   },
   watch: {
