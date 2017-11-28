@@ -1,5 +1,8 @@
 <template>
-  <gol-preview />
+  <div>
+    <gol-preview />
+    <gol-board />
+  </div>
 </template>
 
 <script lang="ts">

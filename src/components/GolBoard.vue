@@ -1,27 +1,76 @@
 <template>
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    xmlns:xlink="http://www.w3.org/1999/xlink"
-    :width="1000"
-    :height="500"
-    @mousedown="onMouseDown"
-    @mouseup="onMouseUp"
-  >
-    <g
-      v-for="(cell, i) in cells"
-      :key="i"
-      :transform="`translate(${(i % padCols) * size} ${Math.floor(i / padCols) * size})`"
+  <div>
+    <section>
+      count:{{count}}
+      w:<input type="number" v-model.number="cols" min="1">
+      h:<input type="number" v-model.number="rows" min="1">
+      disp:<input type="checkbox" v-model="display">
+
+      <button
+        @click="initBoard"
+      >
+        💥 Init
+      </button>
+      <button
+        @click="stop();stepNext()"
+      >
+        → step
+      </button>
+
+      <span>
+        <button
+          v-if="isPlaying"
+          @click="stop"
+        >
+          ■ stop
+        </button>
+        <span
+          v-else
+        >
+          <button
+            @click="play"
+          >
+            ▶ play
+          </button>
+          <input type="number" v-model.number="playInterval">ms
+        </span>
+      </span>
+
+
+      <button
+        @click="perf"
+      >
+        🔎 perf
+      </button>
+      perfcount:<input type="number" v-model.number="perfCount" min="1">
+
+    </section>
+
+    <svg
+      v-if="display"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      :width="cols * size"
+      :height="rows * size"
+      @mousedown="onMouseDown"
+      @mouseup="onMouseUp"
     >
-      <gol-cell
-        :i="i"
-        :size="size"
-        :state="cell.state"
-        @mousedown="checkCell"
-        @mouseover="onCellOver"
-        ref="gol"
-      ></gol-cell>
-    </g>
-  </svg>
+      <g
+        v-for="(cell, i) in cells"
+        :key="i"
+        :transform="`translate(${(i % padCols) * size} ${Math.floor(i / padCols) * size})`"
+      >
+        <gol-cell
+          :i="i"
+          :size="size"
+          :state="cell.state"
+          @mousedown="checkCell"
+          @mouseover="onCellOver"
+          ref="gol"
+        ></gol-cell>
+      </g>
+    </svg>
+  </div>
 </template>
 
 <script lang="ts">
@@ -70,35 +119,53 @@ export default Vue.extend({
   },
   data: function () {
     return {
+      display: true,
+      playingId: 0,
+      playInterval: 100,
+      w: 80,
+      perfCount: 50,
       isMouseDown: false,
       gen: 0,
       cells: [{
         state: 0
       }],
-      neighbors: [0]
+      neighbors: [0],
+      cols: 100,
+      rows: 30
     }
   },
   props: {
-    cols: { type: Number, required: false, default: 100 },
-    rows: { type: Number, required: false, default: 100 },
     size: { type: Number, required: false, default: 10 },
-    play: { type: Boolean, required: false, default: false },
     interval: { type: Number }
   },
-  watch: {
-    play: function (val) {
-      val ? this.start() : this.stop()
-    }
-  },
   computed: {
+    isPlaying (): boolean { return this.playingId !== 0 },
     padCols (): number {
       return this.cols + padding * 2
     },
     padRows (): number {
       return this.rows + padding * 2
+    },
+    count (): number {
+      return this.cols * this.rows
     }
   },
   methods: {
+    initBoard (): void {
+      this.random()
+    },
+    perf (): void {
+      console.log('start', `${this.count} dot x ${this.perfCount} step`)
+      const start = window.performance.now()
+      let c = this.perfCount
+      // console.time('perf')
+      while (c-- > 0) {
+        this.stepNext()
+      }
+      // console.timeEnd('perf')
+      const time = window.performance.now() - start
+      console.log('end', time, time / this.perfCount)
+    },
     onMouseDown () {
       this.isMouseDown = true
     },
@@ -112,17 +179,14 @@ export default Vue.extend({
       if (!this.isMouseDown) return
       this.checkCell(i)
     },
-    start (): void {
-      console.log('start')
-      timerID = setInterval(this.nextGen, this.interval)
+    play (): void {
+      timerID = setInterval(this.stepNext, this.interval)
     },
     stop (): void {
-      console.log('stop')
       clearInterval(timerID)
     },
     step (): void {
-      console.log('step')
-      this.nextGen()
+      this.stepNext()
     },
     clear (): void {
       this.gen = 0
@@ -132,7 +196,7 @@ export default Vue.extend({
       this.gen = 0
       this.cells = initBoard(this.padRows, this.padCols, () => Math.random() > 0.8 ? 1 : 0)
     },
-    nextGen (): void {
+    stepNext (): void {
       this.gen++
 
       const nCounts = this.cells
