@@ -1,5 +1,6 @@
 'use strict'
 const path = require('path')
+const webpack = require('webpack')
 const utils = require('./utils')
 const config = require('../config')
 const vueLoaderConfig = require('./vue-loader.conf')
@@ -25,6 +26,7 @@ module.exports = {
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
       '@': resolve('src'),
+      'three/OrbitControls': 'three/examples/js/controls/OrbitControls.js'
     }
   },
   module: {
@@ -80,5 +82,10 @@ module.exports = {
         }
       }
     ]
-  }
+  },
+  plugins:[
+    new webpack.ProvidePlugin({
+      'THREE': 'three'
+    })
+  ]
 }

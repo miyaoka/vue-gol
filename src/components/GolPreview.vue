@@ -149,7 +149,7 @@ export default Vue.extend({
   components: {
     GolPreviewTable
   },
-  data: function () {
+  data () {
     return {
       rawdata: '',
       display: true,

@@ -26,7 +26,7 @@ export default Vue.extend({
   name: 'GolPreviewTable',
   components: {
   },
-  data: function () {
+  data () {
     return {
     }
   },

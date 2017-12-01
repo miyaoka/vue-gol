@@ -117,7 +117,7 @@ export default Vue.extend({
     this.random()
     this.neighbors = neighbors(this.padCols, this.padRows)
   },
-  data: function () {
+  data () {
     return {
       display: true,
       playingId: 0,
