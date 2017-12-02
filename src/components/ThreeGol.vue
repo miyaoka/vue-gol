@@ -23,7 +23,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import * as THREE from 'three'
-import 'three/OrbitControls'
+import 'three/examples/js/controls/OrbitControls'
 
 let renderer: THREE.WebGLRenderer
 let camera: THREE.PerspectiveCamera

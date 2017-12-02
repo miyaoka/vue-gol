@@ -25,8 +25,7 @@ module.exports = {
     extensions: ['.ts', '.js', '.vue', '.json'],
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
-      '@': resolve('src'),
-      'three/OrbitControls': 'three/examples/js/controls/OrbitControls.js'
+      '@': resolve('src')
     }
   },
   module: {
@@ -56,6 +55,15 @@ module.exports = {
         test: /\.js$/,
         loader: 'babel-loader',
         include: [resolve('src'), resolve('test')]
+      },
+      {
+        test: /\.(glsl|vs|fs|vert|frag)$/,
+        loader: 'shader-loader',
+        options: {
+          glsl: {
+            chunkPath: resolve('shaders')
+          }
+        }
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
