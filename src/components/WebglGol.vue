@@ -17,13 +17,17 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import frag from '@/shaders/shader.frag'
-import vert from '@/shaders/shader.vert'
+import frag from '@/shaders/golRandom.frag'
+import fgCopy from '@/shaders/golCopy.frag'
+import fgProcess from '@/shaders/golProcess.frag'
+import vert from '@/shaders/gol.vert'
+import { GlUtil, GlUtilProgram } from '@/lib/GlUtil'
 
-let gl: WebGLRenderingContext
-let sp: WebGLProgram | null
 const vertexCount = 100000
 const vertices: number[] = []
+
+let gu: GlUtil
+let gup: GlUtilProgram
 
 export default Vue.extend({
   components: {
@@ -45,24 +49,12 @@ export default Vue.extend({
     if (!context) return
 
     // gl
-    gl = context
-    gl.viewport(0, 0, this.w, this.h)
-    gl.clearColor(1, 1, 0.9, 1)
+    gu = new GlUtil(context)
+    gu.gl.viewport(0, 0, this.w, this.h)
+    gu.gl.clearColor(1, 1, 0.9, 1)
 
     // shaders
-    const vs = gl.createShader(gl.VERTEX_SHADER)
-    gl.shaderSource(vs, vert)
-    gl.compileShader(vs)
-
-    const fs = gl.createShader(gl.FRAGMENT_SHADER)
-    gl.shaderSource(fs, frag)
-    gl.compileShader(fs)
-
-    sp = gl.createProgram()
-    gl.attachShader(sp, vs)
-    gl.attachShader(sp, fs)
-    gl.linkProgram(sp)
-    gl.useProgram(sp)
+    gup = gu.makeProgram(vert, frag)
 
     // vert
 
@@ -72,46 +64,24 @@ export default Vue.extend({
       vertices.push(Math.random() * 2 - 1)
     }
 
-    const buffer = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW)
+    const buffer = gu.gl.createBuffer()
+    gu.gl.bindBuffer(gu.gl.ARRAY_BUFFER, buffer)
+    gu.gl.bufferData(gu.gl.ARRAY_BUFFER, new Float32Array(vertices), gu.gl.DYNAMIC_DRAW)
 
 
-    const coords = gl.getAttribLocation(sp, 'coords')
-    gl.vertexAttribPointer(coords, 2, gl.FLOAT, false, 0, 0)
-    gl.enableVertexAttribArray(coords)
-
-    const pointSize = gl.getAttribLocation(sp, 'pointSize')
-    gl.vertexAttrib1f(pointSize, 1)
-
-    const color = gl.getUniformLocation(sp, 'color')
-    gl.uniform4f(color, 0, 0, 0, 1)
-
-
-    // gl.vertexAttrib3f(
-    //   gl.getAttribLocation(sp, 'coords'),
-    //   0, 0, 0
-    // )
-
-    // gl.vertexAttrib1f(
-    //   gl.getAttribLocation(sp, 'pointSize'),
-    //   300
-    // )
-
-    // gl.uniform4f(
-    //   gl.getUniformLocation(sp, 'color'),
-    //   1, 0.9, 0.9, 1
-    // )
+    const pos = gup.getAttribLocation('pos')
+    gu.gl.vertexAttribPointer(pos, 2, gu.gl.FLOAT, false, 0, 0)
+    gu.gl.enableVertexAttribArray(pos)
 
     this.play()
   },
   watch: {
-    x (val: number): void {
-      gl.vertexAttrib3f(
-        gl.getAttribLocation(sp, 'coords'),
-        val, 0, 0
-      )
-    }
+    // x (val: number): void {
+    //   gu.gl.vertexAttrib3f(
+    //     gu.gl.getAttribLocation(sp, 'coords'),
+    //     val, 0, 0
+    //   )
+    // }
   },
   computed: {
     halfW (): number {
@@ -147,10 +117,10 @@ export default Vue.extend({
         vertices[i] += Math.random() * 0.01 - 0.005
         vertices[i + 1] += Math.random() * 0.01 - 0.005
       }
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(vertices))
+      gu.gl.bufferSubData(gu.gl.ARRAY_BUFFER, 0, new Float32Array(vertices))
 
-      gl.clear(gl.COLOR_BUFFER_BIT)
-      gl.drawArrays(gl.POINTS, 0, vertexCount)
+      gu.gl.clear(gu.gl.COLOR_BUFFER_BIT)
+      gu.gl.drawArrays(gu.gl.POINTS, 0, vertexCount)
     }
   },
   filters: {
