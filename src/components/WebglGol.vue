@@ -4,7 +4,8 @@
       <button
         @click="togglePlay"
       >{{isPlaying | playbutton}}</button>
-      <input type="range" v-model.number="x" min="-1" max="1" step="any">
+      <input type="range" v-model.number="x" min="1" max="10" step="any">
+      {{x.toFixed(1)}}
     </div>
 
     <canvas
@@ -17,17 +18,18 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import frag from '@/shaders/golRandom.frag'
+import GlUtil from '../lib/GlUtil'
+
+import fgColor from '@/shaders/color.frag'
+import fgRandom from '@/shaders/golRandom.frag'
 import fgCopy from '@/shaders/golCopy.frag'
 import fgProcess from '@/shaders/golProcess.frag'
 import vert from '@/shaders/gol.vert'
-import { GlUtil, GlUtilProgram } from '@/lib/GlUtil'
 
-const vertexCount = 100000
+const vertexCount = 10000
 const vertices: number[] = []
 
-let gu: GlUtil
-let gup: GlUtilProgram
+let gl: GlUtil
 
 export default Vue.extend({
   components: {
@@ -45,16 +47,16 @@ export default Vue.extend({
   },
   mounted () {
     const canvas = (this.$refs.canvas as HTMLCanvasElement)
-    let context = canvas.getContext('webgl')
-    if (!context) return
+    let cx = canvas.getContext('webgl')
+    if (!cx) return
 
     // gl
-    gu = new GlUtil(context)
-    gu.gl.viewport(0, 0, this.w, this.h)
-    gu.gl.clearColor(1, 1, 0.9, 1)
+    gl = new GlUtil(cx)
+    cx.viewport(0, 0, this.w, this.h)
+    cx.clearColor(1, 1, 0.9, 1)
 
     // shaders
-    gup = gu.makeProgram(vert, frag)
+    gl.linkProgram(vert, fgColor).use()
 
     // vert
 
@@ -64,24 +66,25 @@ export default Vue.extend({
       vertices.push(Math.random() * 2 - 1)
     }
 
-    const buffer = gu.gl.createBuffer()
-    gu.gl.bindBuffer(gu.gl.ARRAY_BUFFER, buffer)
-    gu.gl.bufferData(gu.gl.ARRAY_BUFFER, new Float32Array(vertices), gu.gl.DYNAMIC_DRAW)
+    const buffer = cx.createBuffer()
+    cx.bindBuffer(cx.ARRAY_BUFFER, buffer)
+    cx.bufferData(cx.ARRAY_BUFFER, new Float32Array(vertices), cx.DYNAMIC_DRAW)
 
+    const pos2d = gl.getAttribLocation('pos2d')
+    cx.vertexAttribPointer(pos2d, 2, cx.FLOAT, false, 0, 0)
+    cx.enableVertexAttribArray(pos2d)
 
-    const pos = gup.getAttribLocation('pos')
-    gu.gl.vertexAttribPointer(pos, 2, gu.gl.FLOAT, false, 0, 0)
-    gu.gl.enableVertexAttribArray(pos)
+    const size = gl.getAttribLocation('size')
+    cx.vertexAttrib1f(size, 2)
+
+    cx.uniform4f(gl.getUniformLocation('color'), 1, 0.5, 0, 1)
 
     this.play()
   },
   watch: {
-    // x (val: number): void {
-    //   gu.gl.vertexAttrib3f(
-    //     gu.gl.getAttribLocation(sp, 'coords'),
-    //     val, 0, 0
-    //   )
-    // }
+    x (val: number): void {
+      gl.context.vertexAttrib1f(gl.getAttribLocation('size'), val)
+    }
   },
   computed: {
     halfW (): number {
@@ -117,10 +120,11 @@ export default Vue.extend({
         vertices[i] += Math.random() * 0.01 - 0.005
         vertices[i + 1] += Math.random() * 0.01 - 0.005
       }
-      gu.gl.bufferSubData(gu.gl.ARRAY_BUFFER, 0, new Float32Array(vertices))
+      const cx = gl.context
+      cx.bufferSubData(cx.ARRAY_BUFFER, 0, new Float32Array(vertices))
 
-      gu.gl.clear(gu.gl.COLOR_BUFFER_BIT)
-      gu.gl.drawArrays(gu.gl.POINTS, 0, vertexCount)
+      cx.clear(cx.COLOR_BUFFER_BIT)
+      cx.drawArrays(cx.POINTS, 0, vertexCount)
     }
   },
   filters: {
