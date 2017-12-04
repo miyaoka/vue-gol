@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import GlUtil from '../lib/GlUtil'
+import Wgl, { Program, Buffer } from '../lib/Wgl'
 
 import fgColor from '@/shaders/color.frag'
 import fgRandom from '@/shaders/golRandom.frag'
@@ -10,7 +10,9 @@ import vert from '@/shaders/gol.vert'
 const vertexCount = 10000
 const vertices: number[] = []
 
-let gl: GlUtil
+let wgl: Wgl
+let programs: { [key: string]: Program } = {}
+let buffers: { [key: string]: Buffer } = {}
 
 export default Vue.extend({
   components: {},
@@ -22,21 +24,22 @@ export default Vue.extend({
       animationId: 0
     }
   },
-  created () {
-    //
-  },
+  // created () {},
   mounted () {
     const canvas = this.$refs.canvas as HTMLCanvasElement
     let cx = canvas.getContext('webgl')
     if (!cx) return
 
-    // gl
-    gl = new GlUtil(cx)
+    // wgl
+    wgl = new Wgl(cx)
     cx.viewport(0, 0, this.w, this.h)
     cx.clearColor(1, 1, 0.9, 1)
 
     // shaders
-    gl.linkProgram(vert, fgColor).use()
+    programs = {
+      copy: wgl.createProgram(vert, fgCopy),
+      gol: wgl.createProgram(vert, fgProcess)
+    }
 
     // vert
 
@@ -50,20 +53,22 @@ export default Vue.extend({
     cx.bindBuffer(cx.ARRAY_BUFFER, buffer)
     cx.bufferData(cx.ARRAY_BUFFER, new Float32Array(vertices), cx.DYNAMIC_DRAW)
 
-    const pos2d = gl.getAttribLocation('pos2d')
+    const pg = programs.copy
+
+    const pos2d = pg.getAttribLocation('pos2d')
     cx.vertexAttribPointer(pos2d, 2, cx.FLOAT, false, 0, 0)
     cx.enableVertexAttribArray(pos2d)
 
-    const size = gl.getAttribLocation('size')
+    const size = pg.getAttribLocation('size')
     cx.vertexAttrib1f(size, 2)
 
-    cx.uniform4f(gl.getUniformLocation('color'), 1, 0.5, 0, 1)
+    cx.uniform4f(pg.getUniformLocation('color'), 1, 0.5, 0, 1)
 
     this.play()
   },
   watch: {
     x (val: number): void {
-      gl.context.vertexAttrib1f(gl.getAttribLocation('size'), val)
+      wgl.context.vertexAttrib1f(gl.getAttribLocation('size'), val)
     }
   },
   computed: {
@@ -100,7 +105,7 @@ export default Vue.extend({
         vertices[i] += Math.random() * 0.01 - 0.005
         vertices[i + 1] += Math.random() * 0.01 - 0.005
       }
-      const cx = gl.context
+      const cx = wgl.context
       cx.bufferSubData(cx.ARRAY_BUFFER, 0, new Float32Array(vertices))
 
       cx.clear(cx.COLOR_BUFFER_BIT)

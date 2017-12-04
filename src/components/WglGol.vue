@@ -16,7 +16,7 @@
   </div>
 </template>
 
-<script lang="ts" src="./WebglGol">
+<script lang="ts" src="./WglGol">
 </script>
 
 <style>
