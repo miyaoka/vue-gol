@@ -26,13 +26,13 @@ export default Vue.extend({
   },
   // created () {},
   mounted () {
-    const canvas = this.$refs.canvas as HTMLCanvasElement
-    let cx = canvas.getContext('webgl')
-    if (!cx) return
-
-    // wgl
-    wgl = new Wgl(cx)
-    cx.viewport(0, 0, this.w, this.h)
+    try {
+      wgl = Wgl.initFromCanvas(this.$refs.canvas as HTMLCanvasElement)
+    } catch (err) {
+      console.error(err)
+      return
+    }
+    const cx = wgl.context
     cx.clearColor(1, 1, 0.9, 1)
 
     // shaders
@@ -49,9 +49,10 @@ export default Vue.extend({
       vertices.push(Math.random() * 2 - 1)
     }
 
-    const buffer = cx.createBuffer()
-    cx.bindBuffer(cx.ARRAY_BUFFER, buffer)
-    cx.bufferData(cx.ARRAY_BUFFER, new Float32Array(vertices), cx.DYNAMIC_DRAW)
+    const buffer = wgl.createArrayBuffer()
+    buffer.update(vertices, cx.DYNAMIC_DRAW)
+    // cx.bindBuffer(cx.ARRAY_BUFFER, buffer)
+    // cx.bufferData(cx.ARRAY_BUFFER, new Float32Array(vertices), cx.DYNAMIC_DRAW)
 
     const pg = programs.copy
 
@@ -68,7 +69,7 @@ export default Vue.extend({
   },
   watch: {
     x (val: number): void {
-      wgl.context.vertexAttrib1f(gl.getAttribLocation('size'), val)
+      // wgl.context.vertexAttrib1f(gl.getAttribLocation('size'), val)
     }
   },
   computed: {
