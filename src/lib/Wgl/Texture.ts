@@ -11,13 +11,13 @@ class Texture {
     filter: number = context.LINEAR,
     type: number = context.UNSIGNED_BYTE
   ) {
-    const cx = (this.context = context)
-    this.texture = cx.createTexture()
-    cx.bindTexture(cx.TEXTURE_2D, this.texture)
-    cx.texParameteri(cx.TEXTURE_2D, cx.TEXTURE_WRAP_S, wrap)
-    cx.texParameteri(cx.TEXTURE_2D, cx.TEXTURE_WRAP_T, wrap)
-    cx.texParameteri(cx.TEXTURE_2D, cx.TEXTURE_MIN_FILTER, filter)
-    cx.texParameteri(cx.TEXTURE_2D, cx.TEXTURE_MAG_FILTER, filter)
+    const gl = (this.context = context)
+    this.texture = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, this.texture)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter)
     this.format = format
     this.type = type
   }
@@ -29,15 +29,15 @@ class Texture {
   }
 
   public set1 (source: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap | ImageData): Texture {
-    const cx = this.context
+    const gl = this.context
     this.bind()
-    cx.texImage2D(cx.TEXTURE_2D, 0, this.format, this.format, this.type, source)
+    gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, source)
     return this
   }
   public set2 (width: number, height: number, source: ArrayBufferView | null): Texture {
-    const cx = this.context
+    const gl = this.context
     this.bind()
-    cx.texImage2D(cx.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, this.castSource(source))
+    gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, this.castSource(source))
     return this
   }
   public subset1 (
@@ -45,26 +45,26 @@ class Texture {
     xoff: number,
     yoff: number
   ): Texture {
-    const cx = this.context
+    const gl = this.context
     this.bind()
-    cx.texSubImage2D(cx.TEXTURE_2D, 0, xoff, yoff, this.format, this.type, source)
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, xoff, yoff, this.format, this.type, source)
     return this
   }
   public subset2 (xoff: number, yoff: number, width: number, height: number, source: ArrayBufferView | null): Texture {
-    const cx = this.context
+    const gl = this.context
     this.bind()
-    cx.texSubImage2D(cx.TEXTURE_2D, 0, xoff, yoff, width, height, this.format, this.type, this.castSource(source))
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, xoff, yoff, width, height, this.format, this.type, this.castSource(source))
     return this
   }
   public blank (width: number, height: number): Texture {
     return this.set2(width, height, null)
   }
   public bind (unit?: number): Texture {
-    const cx = this.context
+    const gl = this.context
     if (unit !== undefined) {
-      cx.activeTexture(cx.TEXTURE0 + unit)
+      gl.activeTexture(gl.TEXTURE0 + unit)
     }
-    cx.bindTexture(cx.TEXTURE_2D, this.texture)
+    gl.bindTexture(gl.TEXTURE_2D, this.texture)
     return this
   }
 }

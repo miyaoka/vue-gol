@@ -18,9 +18,9 @@ class Framebuffer {
     return this
   }
   public attach (texture: WebGLTexture | null): Framebuffer {
-    const cx = this.context
+    const gl = this.context
     this.bind()
-    cx.framebufferTexture2D(cx.FRAMEBUFFER, cx.COLOR_ATTACHMENT0, cx.TEXTURE_2D, texture, 0)
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
     return this
   }
 }

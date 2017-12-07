@@ -39,9 +39,9 @@ export default Vue.extend({
       console.error(err)
       return
     }
-    const cx = wgl.context
-    cx.clearColor(1, 1, 0.9, 1)
-    cx.disable(cx.DEPTH_TEST)
+    const gl = wgl.context
+    gl.clearColor(1, 1, 0.9, 1)
+    gl.disable(gl.DEPTH_TEST)
 
     // shaders
     programs = {
@@ -52,8 +52,8 @@ export default Vue.extend({
       quad: wgl.createArrayBuffer().update(Wgl.QUAD2)
     }
     textures = {
-      front: wgl.createTexture(cx.RGBA, cx.REPEAT, cx.NEAREST).blank(this.viewSize[0], this.viewSize[1]),
-      back: wgl.createTexture(cx.RGBA, cx.REPEAT, cx.NEAREST).blank(this.viewSize[0], this.viewSize[1])
+      front: wgl.createTexture(gl.RGBA, gl.REPEAT, gl.NEAREST).blank(this.viewSize[0], this.viewSize[1]),
+      back: wgl.createTexture(gl.RGBA, gl.REPEAT, gl.NEAREST).blank(this.viewSize[0], this.viewSize[1])
     }
     framebuffers = {
       step: wgl.createFramebuffer()
@@ -91,7 +91,7 @@ export default Vue.extend({
   },
   methods: {
     setTexture (state: Uint8Array): void {
-      const cx = wgl.context
+      const gl = wgl.context
       const rgba = new Uint8Array(this.viewSquare * 4)
       state.forEach((val, i) => {
         const ii = i * 4
@@ -116,18 +116,18 @@ export default Vue.extend({
       this.isPlaying ? this.stop() : this.play()
     },
     render (): void {
-      const cx = wgl.context
+      const gl = wgl.context
 
       framebuffers.step.attach(textures.back.texture)
       textures.front.bind(0)
-      cx.viewport(0, 0, this.viewSize[0], this.viewSize[1])
+      gl.viewport(0, 0, this.viewSize[0], this.viewSize[1])
 
       programs.gol
         .use()
         .attrib('quad', buffers.quad, 2)
         .uniformi('state', 0)
         .uniform('scale', this.viewSize)
-        .draw(cx.TRIANGLE_STRIP, 4)
+        .draw(gl.TRIANGLE_STRIP, 4)
 
       // swap
       const tmp = textures.front
@@ -136,22 +136,22 @@ export default Vue.extend({
 
       wgl.defaultFramebuffer.bind()
       textures.front.bind()
-      cx.viewport(0, 0, this.viewSize[0], this.viewSize[1])
+      gl.viewport(0, 0, this.viewSize[0], this.viewSize[1])
 
       programs.copy
         .use()
         .attrib('quad', buffers.quad, 2)
         .uniformi('state', 0)
         .uniform('scale', this.viewSize)
-        .draw(cx.TRIANGLE_STRIP, 4)
+        .draw(gl.TRIANGLE_STRIP, 4)
       // for (let i = 0; i < vertexCount * 2; i += 2) {
       //   vertices[i] += Math.random() * 0.01 - 0.005
       //   vertices[i + 1] += Math.random() * 0.01 - 0.005
       // }
-      // const cx = wgl.context
-      // cx.bufferSubData(cx.ARRAY_BUFFER, 0, new Float32Array(vertices))
-      // cx.clear(cx.COLOR_BUFFER_BIT)
-      // cx.drawArrays(cx.POINTS, 0, vertexCount)
+      // const gl = wgl.context
+      // gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(vertices))
+      // gl.clear(gl.COLOR_BUFFER_BIT)
+      // gl.drawArrays(gl.POINTS, 0, vertexCount)
     }
   },
   filters: {

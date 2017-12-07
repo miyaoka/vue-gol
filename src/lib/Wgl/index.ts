@@ -19,12 +19,12 @@ class Wgl {
     return re.exec(name) !== null
   }
   static initFromCanvas (canvas: HTMLCanvasElement): Wgl {
-    const cx = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
-    if (!cx) {
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    if (!gl) {
       throw new Error('This browser does not support WebGL')
     }
-    cx.viewport(0, 0, canvas.width, canvas.height)
-    return new Wgl(cx)
+    gl.viewport(0, 0, canvas.width, canvas.height)
+    return new Wgl(gl)
   }
   public createProgram (vert: string, frag: string): Program {
     return new Program(this.context, vert, frag)

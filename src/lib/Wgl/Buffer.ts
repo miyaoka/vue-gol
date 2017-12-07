@@ -11,8 +11,8 @@ class Buffer {
    */
   constructor (context: WebGLRenderingContext, target: number) {
     this.context = context
-    const cx = this.context
-    this.buffer = cx.createBuffer()
+    const gl = this.context
+    this.buffer = gl.createBuffer()
     this.target = target
     this.size = -1
   }
@@ -23,16 +23,16 @@ class Buffer {
   }
 
   public update (data: Float32Array | number[], usage: number = this.context.DYNAMIC_DRAW): Buffer {
-    const cx = this.context
+    const gl = this.context
     const f32data = data instanceof Array ? new Float32Array(data) : data
     const byteLength = f32data.byteLength
 
     this.bind()
     if (this.size !== byteLength) {
-      cx.bufferData(this.target, f32data, usage)
+      gl.bufferData(this.target, f32data, usage)
       this.size = byteLength
     } else {
-      cx.bufferSubData(this.target, 0, f32data)
+      gl.bufferSubData(this.target, 0, f32data)
     }
 
     return this
