@@ -7,9 +7,6 @@ import fgCopy from '@/shaders/golCopy.frag'
 import fgProcess from '@/shaders/golProcess.frag'
 import vert from '@/shaders/gol.vert'
 
-const vertexCount = 10000
-const vertices: number[] = []
-
 let wgl: Wgl
 let programs: { [key: string]: Program }
 let buffers: { [key: string]: Buffer }
@@ -24,14 +21,12 @@ export default Vue.extend({
   components: {},
   data () {
     return {
-      x: 1,
-      w: 1024,
-      h: 1024,
+      w: 256,
+      h: 256,
       animationId: 0,
-      scale: 4
+      scale: 2
     }
   },
-  // created () {},
   mounted () {
     try {
       wgl = Wgl.initFromCanvas(this.$refs.canvas as HTMLCanvasElement)
@@ -60,17 +55,11 @@ export default Vue.extend({
     }
 
     // random
-    this.setTexture(new Uint8Array(this.viewSquare).map((v) => (Math.random() > 0.5 ? 1 : 0)))
+    this.setTexture(new Uint8Array(this.viewSquare).map((v) => (Math.random() > 0.3 ? 1 : 0)))
 
     this.step()
     this.render()
-
-    //    this.play()
-  },
-  watch: {
-    x (val: number): void {
-      // wgl.context.vertexAttrib1f(gl.getAttribLocation('size'), val)
-    }
+    // this.play()
   },
   computed: {
     halfW (): number {
