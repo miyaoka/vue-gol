@@ -9,7 +9,7 @@ import Vue from 'vue'
 // import GolPreview from '@/components/GolPreview.vue'
 // import GolBoard from '@/components/GolBoard.vue'
 // import ThreeGol from '@/components/ThreeGol.vue'
-import WebglGol from '@/components/WglGol.vue'
+import WglGol from '@/components/WglGol.vue'
 
 export default Vue.extend({
   name: 'app',
