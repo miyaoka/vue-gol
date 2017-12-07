@@ -1,26 +1,28 @@
 class Framebuffer {
-  public context: WebGLRenderingContext
+  public gl: WebGLRenderingContext
   public framebuffer: WebGLFramebuffer | null
-  public renderbuffer: WebGLRenderbuffer | null
+  public renderbuffer: WebGLRenderbuffer | null = null
 
-  constructor (context: WebGLRenderingContext, framebuffer = context.createFramebuffer()) {
-    this.context = context
+  constructor (gl: WebGLRenderingContext, framebuffer = gl.createFramebuffer()) {
+    this.gl = gl
     this.framebuffer = framebuffer
-    this.renderbuffer = null
   }
 
   public bind (): Framebuffer {
-    this.context.bindFramebuffer(this.context.FRAMEBUFFER, this.framebuffer)
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer)
+
     return this
   }
   public unbind (): Framebuffer {
-    this.context.bindFramebuffer(this.context.FRAMEBUFFER, null)
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
     return this
   }
   public attach (texture: WebGLTexture | null): Framebuffer {
-    const gl = this.context
+    const gl = this.gl
+
     this.bind()
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
+
     return this
   }
 }

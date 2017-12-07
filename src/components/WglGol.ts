@@ -39,7 +39,7 @@ export default Vue.extend({
       console.error(err)
       return
     }
-    const gl = wgl.context
+    const gl = wgl.gl
     gl.clearColor(1, 1, 0.9, 1)
     gl.disable(gl.DEPTH_TEST)
 
@@ -58,6 +58,7 @@ export default Vue.extend({
     framebuffers = {
       step: wgl.createFramebuffer()
     }
+    console.log(textures.front.texture)
 
     // random
     this.setTexture(new Uint8Array(this.viewSize[0] * this.viewSize[1]).map((v) => (Math.random() > 0.5 ? 1 : 0)))
@@ -91,7 +92,7 @@ export default Vue.extend({
   },
   methods: {
     setTexture (state: Uint8Array): void {
-      const gl = wgl.context
+      const gl = wgl.gl
       const rgba = new Uint8Array(this.viewSquare * 4)
       state.forEach((val, i) => {
         const ii = i * 4
@@ -105,6 +106,7 @@ export default Vue.extend({
     },
     update (): void {
       this.animationId = requestAnimationFrame(this.update)
+      this.step()
       this.render()
     },
     stop (): void {
@@ -115,8 +117,9 @@ export default Vue.extend({
     togglePlay (): void {
       this.isPlaying ? this.stop() : this.play()
     },
-    render (): void {
-      const gl = wgl.context
+    step (): void {
+      console.log('step')
+      const gl = wgl.gl
 
       framebuffers.step.attach(textures.back.texture)
       textures.front.bind(0)
@@ -133,9 +136,13 @@ export default Vue.extend({
       const tmp = textures.front
       textures.front = textures.back
       textures.back = tmp
+    },
+    render (): void {
+      console.log('render')
+      const gl = wgl.gl
 
       wgl.defaultFramebuffer.bind()
-      textures.front.bind()
+      textures.front.bind(0)
       gl.viewport(0, 0, this.viewSize[0], this.viewSize[1])
 
       programs.copy

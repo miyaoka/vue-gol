@@ -1,7 +1,5 @@
-attribute vec2 pos2d;
-attribute float size;
+attribute vec2 quad;
 
 void main(void) {
-  gl_Position = vec4(pos2d, 0, 1.0);
-  gl_PointSize = size;
+  gl_Position = vec4(quad, 0, 1.0);
 }

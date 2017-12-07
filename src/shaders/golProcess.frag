@@ -1,10 +1,10 @@
 precision mediump float;
 
-uniform sampler2D texture;
+uniform sampler2D state;
 uniform vec2 scale;
 
 int valueAt(float x, float y) {
-  return int(texture2D(texture, (gl_FragCoord.xy + vec2(x, y)) / scale).r);
+  return int(texture2D(state, (gl_FragCoord.xy + vec2(x, y)) / scale).r);
 }
 bool isAlive() {
   return valueAt(0.0, 0.0) == 1;
