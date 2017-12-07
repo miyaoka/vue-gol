@@ -14,7 +14,8 @@ class Wgl {
   }
   static isArray (object: any) {
     const name = Object.prototype.toString.apply(object, [])
-    const re = / (Float(32|64)|Int(16|32|8)|Uint(16|32|8(Clamped)?))?Array]$/
+    const re = / (Float(32|64))/
+    // |Int(16|32|8)|Uint(16|32|8(Clamped)?))?Array]$/
     return re.exec(name) !== null
   }
   static initFromCanvas (canvas: HTMLCanvasElement): Wgl {
@@ -30,9 +31,6 @@ class Wgl {
   }
   public createArrayBuffer (): Buffer {
     return new Buffer(this.context, this.context.ARRAY_BUFFER)
-  }
-  public createElementArrayBuffer (): Buffer {
-    return new Buffer(this.context, this.context.ELEMENT_ARRAY_BUFFER)
   }
   public createTexture (
     format: number = this.context.RGBA,

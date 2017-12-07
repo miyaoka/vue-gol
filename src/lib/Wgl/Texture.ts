@@ -11,7 +11,7 @@ class Texture {
     filter: number = context.LINEAR,
     type: number = context.UNSIGNED_BYTE
   ) {
-    const cx = (this.context = this.context)
+    const cx = (this.context = context)
     this.texture = cx.createTexture()
     cx.bindTexture(cx.TEXTURE_2D, this.texture)
     cx.texParameteri(cx.TEXTURE_2D, cx.TEXTURE_WRAP_S, wrap)
@@ -20,6 +20,12 @@ class Texture {
     cx.texParameteri(cx.TEXTURE_2D, cx.TEXTURE_MAG_FILTER, filter)
     this.format = format
     this.type = type
+  }
+  castSource (source: ArrayBufferView | null): ArrayBufferView | null {
+    if (source instanceof Array) {
+      source = this.type === this.context.FLOAT ? new Float32Array(source) : new Uint8Array(source)
+    }
+    return source
   }
 
   public set1 (source: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap | ImageData): Texture {
@@ -31,10 +37,23 @@ class Texture {
   public set2 (width: number, height: number, source: ArrayBufferView | null): Texture {
     const cx = this.context
     this.bind()
-    if (source instanceof Array) {
-      source = this.type === cx.FLOAT ? new Float32Array(source) : new Uint8Array(source)
-    }
-    cx.texImage2D(cx.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, source)
+    cx.texImage2D(cx.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, this.castSource(source))
+    return this
+  }
+  public subset1 (
+    source: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap | ImageData,
+    xoff: number,
+    yoff: number
+  ): Texture {
+    const cx = this.context
+    this.bind()
+    cx.texSubImage2D(cx.TEXTURE_2D, 0, xoff, yoff, this.format, this.type, source)
+    return this
+  }
+  public subset2 (xoff: number, yoff: number, width: number, height: number, source: ArrayBufferView | null): Texture {
+    const cx = this.context
+    this.bind()
+    cx.texSubImage2D(cx.TEXTURE_2D, 0, xoff, yoff, width, height, this.format, this.type, this.castSource(source))
     return this
   }
   public blank (width: number, height: number): Texture {

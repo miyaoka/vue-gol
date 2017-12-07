@@ -22,12 +22,18 @@ class Buffer {
     return this
   }
 
-  public update (data: Float32Array | number[], usage: number = this.context.STATIC_DRAW): Buffer {
+  public update (data: Float32Array | number[], usage: number = this.context.DYNAMIC_DRAW): Buffer {
     const cx = this.context
-    this.bind()
     const f32data = data instanceof Array ? new Float32Array(data) : data
-    cx.bufferData(this.target, f32data, usage)
-    cx.bindBuffer(this.target, null)
+    const byteLength = f32data.byteLength
+
+    this.bind()
+    if (this.size !== byteLength) {
+      cx.bufferData(this.target, f32data, usage)
+      this.size = byteLength
+    } else {
+      cx.bufferSubData(this.target, 0, f32data)
+    }
 
     return this
   }

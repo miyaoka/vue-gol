@@ -25,9 +25,10 @@ export default Vue.extend({
   data () {
     return {
       x: 1,
-      w: 640,
-      h: 480,
-      animationId: 0
+      w: 256,
+      h: 256,
+      animationId: 0,
+      scale: 4
     }
   },
   // created () {},
@@ -40,13 +41,7 @@ export default Vue.extend({
     }
     const cx = wgl.context
     cx.clearColor(1, 1, 0.9, 1)
-
-    const a = new Float32Array([ 1, 2, 3 ]) as IArray
-    console.log(a.length)
-
-    const scale = 4
-    const viewSize = new Float32Array([ this.w, this.h ])
-    const stateSize = new Float32Array([ this.w / scale, this.h / scale ])
+    cx.disable(cx.DEPTH_TEST)
 
     // shaders
     programs = {
@@ -57,37 +52,17 @@ export default Vue.extend({
       quad: wgl.createArrayBuffer().update(Wgl.QUAD2)
     }
     textures = {
-      front: wgl.createTexture(cx.RGBA, cx.REPEAT, cx.NEAREST).blank(stateSize[0], stateSize[1]),
-      back: wgl.createTexture(cx.RGBA, cx.REPEAT, cx.NEAREST).blank(stateSize[0], stateSize[1])
+      front: wgl.createTexture(cx.RGBA, cx.REPEAT, cx.NEAREST).blank(this.viewSize[0], this.viewSize[1]),
+      back: wgl.createTexture(cx.RGBA, cx.REPEAT, cx.NEAREST).blank(this.viewSize[0], this.viewSize[1])
     }
     framebuffers = {
       step: wgl.createFramebuffer()
     }
 
-    // // vert
-    // let count = vertexCount
-    // while (count-- > 0) {
-    //   vertices.push(Math.random() * 2 - 1)
-    //   vertices.push(Math.random() * 2 - 1)
-    // }
+    // random
+    this.setTexture(new Uint8Array(this.viewSize[0] * this.viewSize[1]).map((v) => (Math.random() > 0.5 ? 1 : 0)))
 
-    // const buffer = wgl.createArrayBuffer()
-    // buffer.update(vertices, cx.DYNAMIC_DRAW)
-    // // cx.bindBuffer(cx.ARRAY_BUFFER, buffer)
-    // // cx.bufferData(cx.ARRAY_BUFFER, new Float32Array(vertices), cx.DYNAMIC_DRAW)
-
-    // const pg = programs.copy
-
-    // const pos2d = pg.getAttribLocation('pos2d')
-    // cx.vertexAttribPointer(pos2d, 2, cx.FLOAT, false, 0, 0)
-    // cx.enableVertexAttribArray(pos2d)
-
-    // const size = pg.getAttribLocation('size')
-    // cx.vertexAttrib1f(size, 2)
-
-    // cx.uniform4f(pg.getUniformLocation('color'), 1, 0.5, 0, 1)
-
-    this.play()
+    //    this.play()
   },
   watch: {
     x (val: number): void {
@@ -106,9 +81,25 @@ export default Vue.extend({
     },
     isPlaying (): boolean {
       return this.animationId !== 0
+    },
+    viewSize (): Float32Array {
+      return new Float32Array([ this.w, this.h ])
+    },
+    viewSquare (): number {
+      return this.viewSize[0] * this.viewSize[1]
     }
   },
   methods: {
+    setTexture (state: Uint8Array): void {
+      const cx = wgl.context
+      const rgba = new Uint8Array(this.viewSquare * 4)
+      state.forEach((val, i) => {
+        const ii = i * 4
+        rgba[ii + 0] = rgba[ii + 1] = rgba[ii + 2] = state[i] ? 255 : 0
+        rgba[ii + 3] = 255
+      })
+      textures.front.subset2(0, 0, this.viewSize[0], this.viewSize[1], rgba)
+    },
     play (): void {
       this.update()
     },
@@ -117,6 +108,7 @@ export default Vue.extend({
       this.render()
     },
     stop (): void {
+      console.log('stop')
       cancelAnimationFrame(this.animationId)
       this.animationId = 0
     },
@@ -124,11 +116,34 @@ export default Vue.extend({
       this.isPlaying ? this.stop() : this.play()
     },
     render (): void {
-      // const cx = wgl.context
-      // wgl.defaultFramebuffer.bind()
-      // textures.front.bind()
-      // cx.viewport(0, 0, this.w, this.h)
-      // programs.copy.use().attrib('quad', buffers.quad, 2)
+      const cx = wgl.context
+
+      framebuffers.step.attach(textures.back.texture)
+      textures.front.bind(0)
+      cx.viewport(0, 0, this.viewSize[0], this.viewSize[1])
+
+      programs.gol
+        .use()
+        .attrib('quad', buffers.quad, 2)
+        .uniformi('state', 0)
+        .uniform('scale', this.viewSize)
+        .draw(cx.TRIANGLE_STRIP, 4)
+
+      // swap
+      const tmp = textures.front
+      textures.front = textures.back
+      textures.back = tmp
+
+      wgl.defaultFramebuffer.bind()
+      textures.front.bind()
+      cx.viewport(0, 0, this.viewSize[0], this.viewSize[1])
+
+      programs.copy
+        .use()
+        .attrib('quad', buffers.quad, 2)
+        .uniformi('state', 0)
+        .uniform('scale', this.viewSize)
+        .draw(cx.TRIANGLE_STRIP, 4)
       // for (let i = 0; i < vertexCount * 2; i += 2) {
       //   vertices[i] += Math.random() * 0.01 - 0.005
       //   vertices[i + 1] += Math.random() * 0.01 - 0.005

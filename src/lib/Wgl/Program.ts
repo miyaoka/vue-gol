@@ -78,6 +78,20 @@ class Program {
     cxa[method](location, value)
     return this
   }
+  public uniformi (name: string, value?: number | number[] | Int32Array | Float32Array): Program {
+    return this.uniform(name, value, true)
+  }
+  public draw (mode: number, count: number, type?: number): Program {
+    const cx = this.context
+    if (type === undefined) {
+      cx.drawArrays(mode, 0, count)
+    } else {
+      cx.drawElements(mode, count, type, 0)
+    }
+    if (cx.getError() !== cx.NO_ERROR) throw new Error('Render error')
+
+    return this
+  }
 }
 
 export default Program
