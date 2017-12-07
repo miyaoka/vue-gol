@@ -10,7 +10,7 @@ class Wgl {
 
   constructor (gl: WebGLRenderingContext) {
     this.gl = gl
-    this.defaultFramebuffer = new Framebuffer(gl)
+    this.defaultFramebuffer = new Framebuffer(gl, null)
   }
   static isArray (object: any): boolean {
     const name = Object.prototype.toString.apply(object, [])

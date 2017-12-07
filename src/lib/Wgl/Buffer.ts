@@ -9,7 +9,7 @@ class Buffer {
    * @param gl
    * @param target ARRAY_BUFFER | ELEMENT_ARRAY_BUFFER
    */
-  constructor (gl: WebGLRenderingContext, target: number) {
+  constructor (gl: WebGLRenderingContext, target: number = gl.ARRAY_BUFFER) {
     this.gl = gl
     this.buffer = gl.createBuffer()
     this.target = target
