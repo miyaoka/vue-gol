@@ -1,6 +1,6 @@
 <template>
   <div>
-    <wgl-gol />
+    <wgl-gol-wrapper />
   </div>
 </template>
 
@@ -9,7 +9,7 @@ import Vue from 'vue'
 // import GolPreview from '@/components/GolPreview.vue'
 // import GolBoard from '@/components/GolBoard.vue'
 // import ThreeGol from '@/components/ThreeGol.vue'
-import WglGol from '@/components/WglGol.vue'
+import WglGolWrapper from '@/components/WglGolWrapper.vue'
 
 export default Vue.extend({
   name: 'app',
@@ -17,7 +17,7 @@ export default Vue.extend({
     // GolBoard,
     // GolPreview,
     // ThreeGol,
-    WglGol
+    WglGolWrapper
   },
   data () {
     return {

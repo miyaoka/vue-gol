@@ -21,46 +21,40 @@ interface IArray {
 
 export default Vue.extend({
   components: {},
+  mounted () {
+    this.initGL()
+  },
   data () {
     return {
-      w: 128,
-      h: 128,
-      animationId: 0,
-      scale: 4,
-      span: 10,
-      fps: 0
+      animationId: 0
     }
   },
-  mounted () {
-    try {
-      wgl = Wgl.initFromCanvas(this.$refs.canvas as HTMLCanvasElement)
-    } catch (err) {
-      console.error(err)
-      return
+  props: {
+    w: { type: Number, default: 128 },
+    h: { type: Number, default: 128 },
+    scale: { type: Number, default: 1 },
+    isPlaying: { type: Boolean, default: false },
+    noise: { type: Boolean, default: false },
+    randomSeed: { type: Number, default: 10 },
+    fps: { type: Number, default: 0 },
+    stepCount: { type: Number, default: 0 }
+  },
+  watch: {
+    noise () {
+      this.initRandom(this.randomSeed)
+    },
+    randomSeed (val) {
+      this.initRandom(val)
+    },
+    w (val) {
+      this.initGL()
+    },
+    h (val) {
+      this.initGL()
+    },
+    isPlaying (val) {
+      val ? this.play() : this.stop()
     }
-    const gl = wgl.gl
-    // gl.clearColor(1, 1, 0.9, 1)
-    gl.disable(gl.DEPTH_TEST)
-
-    // shaders
-    programs = {
-      copy: wgl.createProgram(vert, fgCopy),
-      gol: wgl.createProgram(vert, fgProcess)
-    }
-    buffers = {
-      quad: wgl.createArrayBuffer().update(Wgl.QUAD2, gl.STATIC_DRAW)
-    }
-    textures = {
-      front: wgl.createTexture(gl.RGBA, gl.REPEAT, gl.NEAREST).blank(this.viewSize[0], this.viewSize[1]),
-      back: wgl.createTexture(gl.RGBA, gl.REPEAT, gl.NEAREST).blank(this.viewSize[0], this.viewSize[1])
-    }
-    framebuffers = {
-      step: wgl.createFramebuffer()
-    }
-
-    this.initRandom()
-
-    // this.play()
   },
   computed: {
     halfW (): number {
@@ -72,9 +66,6 @@ export default Vue.extend({
     aspect (): number {
       return this.w / this.h
     },
-    isPlaying (): boolean {
-      return this.animationId !== 0
-    },
     viewSize (): Float32Array {
       return new Float32Array([ this.w, this.h ])
     },
@@ -83,50 +74,84 @@ export default Vue.extend({
     }
   },
   methods: {
-    initRandom0 (): void {
-      this.stop()
-      this.span = Math.ceil(Math.random() * 50) + 2
-      this.setTexture(
-        new Uint8Array(this.viewSquare).map((v, i) => {
-          const num = Math.floor(i / this.w) % this.span
-          // if (num === 0) console.log(i, num)
-          return num === 0 && i % this.w > 0 ? 1 : 0
-          // return Math.random() > 0.3 ? 1 : 0
-        })
-      )
-      // this.step()
-      // this.render()
-      this.play()
-    },
-    initRandom (): void {
-      this.stop()
-      this.span = Math.ceil(Math.random() * 50) + 2
-      this.setTexture(
-        new Uint8Array(this.viewSquare).map((v, i) => {
-          const num = Math.floor(i / this.w) % this.span
-          // if (num === 0) console.log(i, num)
-          return num === 0 && i % this.w > 0 ? 1 : 0
-          // return Math.random() > 0.3 ? 1 : 0
-        })
-      )
-      // this.step()
-      // this.render()
-      this.play()
-    },
-    setTexture (state: Uint8Array): void {
+    initGL () {
+      try {
+        wgl = Wgl.initFromCanvas(this.$refs.canvas as HTMLCanvasElement)
+      } catch (err) {
+        console.error(err)
+        return
+      }
       const gl = wgl.gl
+      // gl.clearColor(1, 1, 0.9, 1)
+      gl.disable(gl.DEPTH_TEST)
+
+      // shaders
+      programs = {
+        copy: wgl.createProgram(vert, fgCopy),
+        gol: wgl.createProgram(vert, fgProcess)
+      }
+      buffers = {
+        quad: wgl.createArrayBuffer().update(Wgl.QUAD2, gl.STATIC_DRAW)
+      }
+      textures = {
+        front: wgl.createTexture(gl.RGBA, gl.REPEAT, gl.NEAREST).blank(this.viewSize[0], this.viewSize[1]),
+        back: wgl.createTexture(gl.RGBA, gl.REPEAT, gl.NEAREST).blank(this.viewSize[0], this.viewSize[1])
+      }
+      framebuffers = {
+        step: wgl.createFramebuffer()
+      }
+      cancelAnimationFrame(this.animationId)
+      this.initRandom(this.randomSeed)
+
+      if (this.isPlaying) this.play()
+    },
+    initRandom (span: number = Math.ceil(Math.random() * 50 + 2)): void {
+      this.$emit('update:stepCount', 0)
+      // this.stop()
+      const noiseRate = this.noise ? 1 / this.viewSquare * 50 : 0
+
+      this.setTexture(
+        new Uint8Array(this.viewSquare).map((v, i) => {
+          const num = Math.floor(i / this.w) % span
+          // if (num === 0) console.log(i, num)
+          return num === 0 && i % this.w > 0 && Math.random() > noiseRate ? 1 : 0
+          // return Math.random() > 0.3 ? 1 : 0
+        }),
+        0x42b983
+      )
+      // let count = Math.random() * 100 + 10
+      // while (count-- > 0) {
+      //   this.stepNext()
+      // }
+      this.render()
+      // this.play()
+    },
+    /**
+     *
+     * @param state
+     * @param color hex
+     */
+    setTexture (state: Uint8Array, color: number): void {
+      const gl = wgl.gl
+      const r = (color & 0xff0000) >> 16
+      const g = (color & 0xff00) >> 8
+      const b = color & 0xff
       const rgba = new Uint8Array(this.viewSquare * 4)
       state.forEach((val, i) => {
         const ii = i * 4
-        rgba[ii + 0] = rgba[ii + 1] = rgba[ii + 2] = rgba[ii + 3] = state[i] ? 255 : 0
+        rgba[ii + 0] = r
+        rgba[ii + 1] = g
+        rgba[ii + 2] = b
+        rgba[ii + 3] = state[i] ? 255 : 0
       })
       textures.front.subset(0, 0, this.viewSize[0], this.viewSize[1], rgba)
     },
     play (): void {
       fpsList = [ performance.now() ]
-      this.update()
+      this.loop()
+      this.$emit('update:isPlaying', true)
     },
-    update (): void {
+    loop (): void {
       fpsList = [ ...fpsList, performance.now() ].slice(-fpsSampleCount)
 
       const diffSum = fpsList
@@ -134,23 +159,23 @@ export default Vue.extend({
         .map((val: number, i: number, ary: number[]) => val - fpsList[i])
         .reduce((prev: number, curr: number) => prev + curr)
 
-      this.fps = 1000 / (diffSum / (fpsList.length - 1))
+      this.$emit('update:fps', 1000 / (diffSum / (fpsList.length - 1)))
 
-      this.animationId = requestAnimationFrame(this.update)
-      this.step()
+      this.animationId = requestAnimationFrame(this.loop)
+      this.stepNext()
     },
     stop (): void {
       cancelAnimationFrame(this.animationId)
-      this.animationId = 0
+      this.animationId = -1
+      this.$emit('update:isPlaying', false)
     },
-    togglePlay (): void {
-      this.isPlaying ? this.stop() : this.play()
-    },
-    step (): void {
+    stepNext (): void {
       this.calc()
       this.render()
     },
     calc (): void {
+      this.$emit('update:stepCount', this.stepCount + 1)
+
       const gl = wgl.gl
 
       framebuffers.step.attach(textures.back.texture)
@@ -182,11 +207,6 @@ export default Vue.extend({
         .uniformi('state', 0)
         .uniform('scale', this.viewSize)
         .draw(gl.TRIANGLE_STRIP, 4)
-    }
-  },
-  filters: {
-    playbutton (isPlaying: boolean) {
-      return isPlaying ? '■ stop' : '▶ play'
     }
   }
 })

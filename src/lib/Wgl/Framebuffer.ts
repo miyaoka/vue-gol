@@ -15,6 +15,7 @@ class Framebuffer {
   }
   public unbind (): Framebuffer {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
+
     return this
   }
   public attach (texture: WebGLTexture | null): Framebuffer {

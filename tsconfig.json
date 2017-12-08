@@ -4,17 +4,9 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "target": "es6",
-    "lib": [
-      "dom",
-      "esnext",
-      "es2015.promise"
-    ]
+    "target": "es5",
+    "lib": [ "dom", "esnext", "es2015.promise" ]
   },
-  "include": [
-    "./src/**/*.ts"
-  ],
-  "files" : [
-    "vue-shims.d.ts"
-  ]
+  "include": [ "./src/**/*.ts" ],
+  "files": [ "vue-shims.d.ts" ]
 }

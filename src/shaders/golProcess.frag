@@ -21,7 +21,11 @@ void main(void) {
   valueAt( 1.0,  0.0) +
   valueAt( 1.0,  1.0);
 
+  vec4 cl = texture2D(state, gl_FragCoord.xy / scale);
+
   gl_FragColor = (sum == 3 || (sum == 2 && isAlive()))
   ? vec4(0.5, 0.8, 0.5, 1.0)
-  : gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+  // : vec4(0.0, 0.0, 0.0, 0.0);
+  // : cl.a < 0.07 ? vec4(0.0, 0.0, 0.0, 0.0) : cl * 0.97;
+  : cl.a < 0.07 ? vec4(0.0, 0.0, 0.0, 0.0) : cl * 0.9;
 }
