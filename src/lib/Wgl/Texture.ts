@@ -28,15 +28,7 @@ class Texture {
     }
     return source
   }
-  public set1 (source: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap | ImageData): Texture {
-    const gl = this.gl
-
-    this.bind()
-    gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, source)
-
-    return this
-  }
-  public set2 (width: number, height: number, source: ArrayBufferView | null): Texture {
+  public set (width: number, height: number, source: ArrayBufferView | null): Texture {
     const gl = this.gl
 
     this.bind()
@@ -44,7 +36,23 @@ class Texture {
 
     return this
   }
-  public subset1 (
+  public set2 (source: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap | ImageData): Texture {
+    const gl = this.gl
+
+    this.bind()
+    gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, source)
+
+    return this
+  }
+  public subset (xoff: number, yoff: number, width: number, height: number, source: ArrayBufferView | null): Texture {
+    const gl = this.gl
+
+    this.bind()
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, xoff, yoff, width, height, this.format, this.type, this.castSource(source))
+
+    return this
+  }
+  public subset2 (
     source: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap | ImageData,
     xoff: number,
     yoff: number
@@ -56,16 +64,8 @@ class Texture {
 
     return this
   }
-  public subset2 (xoff: number, yoff: number, width: number, height: number, source: ArrayBufferView | null): Texture {
-    const gl = this.gl
-
-    this.bind()
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, xoff, yoff, width, height, this.format, this.type, this.castSource(source))
-
-    return this
-  }
   public blank (width: number, height: number): Texture {
-    return this.set2(width, height, null)
+    return this.set(width, height, null)
   }
   public bind (unit?: number): Texture {
     const gl = this.gl

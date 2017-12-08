@@ -6,10 +6,18 @@
       <button
         @click="togglePlay"
       >{{isPlaying | playbutton}}</button>
+      <button
+        @click="step"
+      >step</button>
+      <button
+        @click="initRandom()"
+      >random</button>
+      <input type="number" v-model.number="span" min="1" max="1000">
+      {{fps.toFixed(0)}}
     </div>
 
     <div
-      :style="`height: ${h * scale}px; width: ${w * scale}px;`"
+      :style="`background: #34495E; height: ${h * scale}px; width: ${w * scale}px;`"
     >
       <canvas
         ref="canvas"

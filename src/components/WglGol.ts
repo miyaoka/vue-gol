@@ -12,6 +12,8 @@ let programs: { [key: string]: Program }
 let buffers: { [key: string]: Buffer }
 let textures: { [key: string]: Texture }
 let framebuffers: { [key: string]: Framebuffer }
+let fpsList: number[] = []
+const fpsSampleCount = 30
 
 interface IArray {
   length: number
@@ -21,10 +23,12 @@ export default Vue.extend({
   components: {},
   data () {
     return {
-      w: 256,
-      h: 256,
+      w: 128,
+      h: 128,
       animationId: 0,
-      scale: 2
+      scale: 4,
+      span: 10,
+      fps: 0
     }
   },
   mounted () {
@@ -54,11 +58,8 @@ export default Vue.extend({
       step: wgl.createFramebuffer()
     }
 
-    // random
-    this.setTexture(new Uint8Array(this.viewSquare).map((v) => (Math.random() > 0.3 ? 1 : 0)))
+    this.initRandom()
 
-    this.step()
-    this.render()
     // this.play()
   },
   computed: {
@@ -82,23 +83,61 @@ export default Vue.extend({
     }
   },
   methods: {
+    initRandom0 (): void {
+      this.stop()
+      this.span = Math.ceil(Math.random() * 50) + 2
+      this.setTexture(
+        new Uint8Array(this.viewSquare).map((v, i) => {
+          const num = Math.floor(i / this.w) % this.span
+          // if (num === 0) console.log(i, num)
+          return num === 0 && i % this.w > 0 ? 1 : 0
+          // return Math.random() > 0.3 ? 1 : 0
+        })
+      )
+      // this.step()
+      // this.render()
+      this.play()
+    },
+    initRandom (): void {
+      this.stop()
+      this.span = Math.ceil(Math.random() * 50) + 2
+      this.setTexture(
+        new Uint8Array(this.viewSquare).map((v, i) => {
+          const num = Math.floor(i / this.w) % this.span
+          // if (num === 0) console.log(i, num)
+          return num === 0 && i % this.w > 0 ? 1 : 0
+          // return Math.random() > 0.3 ? 1 : 0
+        })
+      )
+      // this.step()
+      // this.render()
+      this.play()
+    },
     setTexture (state: Uint8Array): void {
       const gl = wgl.gl
       const rgba = new Uint8Array(this.viewSquare * 4)
       state.forEach((val, i) => {
         const ii = i * 4
-        rgba[ii + 0] = rgba[ii + 1] = rgba[ii + 2] = state[i] ? 255 : 0
-        rgba[ii + 3] = 255
+        rgba[ii + 0] = rgba[ii + 1] = rgba[ii + 2] = rgba[ii + 3] = state[i] ? 255 : 0
       })
-      textures.front.subset2(0, 0, this.viewSize[0], this.viewSize[1], rgba)
+      textures.front.subset(0, 0, this.viewSize[0], this.viewSize[1], rgba)
     },
     play (): void {
+      fpsList = [ performance.now() ]
       this.update()
     },
     update (): void {
+      fpsList = [ ...fpsList, performance.now() ].slice(-fpsSampleCount)
+
+      const diffSum = fpsList
+        .slice(1)
+        .map((val: number, i: number, ary: number[]) => val - fpsList[i])
+        .reduce((prev: number, curr: number) => prev + curr)
+
+      this.fps = 1000 / (diffSum / (fpsList.length - 1))
+
       this.animationId = requestAnimationFrame(this.update)
       this.step()
-      this.render()
     },
     stop (): void {
       cancelAnimationFrame(this.animationId)
@@ -108,6 +147,10 @@ export default Vue.extend({
       this.isPlaying ? this.stop() : this.play()
     },
     step (): void {
+      this.calc()
+      this.render()
+    },
+    calc (): void {
       const gl = wgl.gl
 
       framebuffers.step.attach(textures.back.texture)
