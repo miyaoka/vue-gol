@@ -144,7 +144,7 @@ export default Vue.extend({
         rgba[ii + 2] = b
         rgba[ii + 3] = state[i] ? 255 : 0
       })
-      textures.front.subset(0, 0, this.viewSize[0], this.viewSize[1], rgba)
+      textures.front.subset(0, 0, rgba, this.viewSize[0], this.viewSize[1])
     },
     play (): void {
       fpsList = [ performance.now() ]
